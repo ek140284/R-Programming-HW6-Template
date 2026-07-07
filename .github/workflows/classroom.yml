@@ -1,0 +1,109 @@
+name: Autograding Tests
+
+on:
+  - push
+  - workflow_dispatch
+
+permissions:
+  checks: write
+  actions: read
+  contents: read
+
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - name: Install required R packages
+        shell: bash
+        run: |
+          sudo Rscript -e 'options(repos = c(CRAN = "https://packagemanager.posit.co/cran/__linux__/noble/latest")); install.packages("tidyverse", lib = .Library)'
+
+      - name: Verify packages are available
+        shell: bash
+        run: |
+          Rscript -e 'library(tidyverse); cat("packages OK\n")'
+
+      # ============================================
+      # Q1 squares（forで1〜10の2乗）
+      # ============================================
+      - name: Q1 squares
+        id: q1
+        continue-on-error: true
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: Q1 squares
+          command: Rscript .github/check_q.R 1
+          max-score: 2
+
+      # ============================================
+      # Q2 year（whileで180万円を超えるまでの年数）
+      # ============================================
+      - name: Q2 year
+        id: q2
+        continue-on-error: true
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: Q2 year
+          command: Rscript .github/check_q.R 2
+          max-score: 2
+
+      # ============================================
+      # Q3 cum（forで1〜20の累積和）
+      # ============================================
+      - name: Q3 cum
+        id: q3
+        continue-on-error: true
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: Q3 cum
+          command: Rscript .github/check_q.R 3
+          max-score: 2
+
+      # ============================================
+      # Q4 growth（forで前年比成長率、1年目はNA）
+      # ============================================
+      - name: Q4 growth
+        id: q4
+        continue-on-error: true
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: Q4 growth
+          command: Rscript .github/check_q.R 4
+          max-score: 2
+
+      # ============================================
+      # Q5 n_na・n_over（forでNAをnextで飛ばす）
+      # ============================================
+      - name: Q5 n_na and n_over
+        id: q5
+        continue-on-error: true
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: Q5 n_na and n_over
+          command: Rscript .github/check_q.R 5
+          max-score: 2
+
+      # ============================================
+      # Reporter
+      # ============================================
+      - name: Autograding Reporter
+        continue-on-error: true
+        uses: classroom-resources/autograding-grading-reporter@v1
+        env:
+          Q1_RESULTS: "${{ steps.q1.outputs.result }}"
+          Q2_RESULTS: "${{ steps.q2.outputs.result }}"
+          Q3_RESULTS: "${{ steps.q3.outputs.result }}"
+          Q4_RESULTS: "${{ steps.q4.outputs.result }}"
+          Q5_RESULTS: "${{ steps.q5.outputs.result }}"
+        with:
+          runners: q1,q2,q3,q4,q5

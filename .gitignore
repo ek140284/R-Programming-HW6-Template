@@ -1,0 +1,6 @@
+.DS_Store
+.Rhistory
+.Rapp.history
+.gitattributes
+*.Rmd
+.RData
